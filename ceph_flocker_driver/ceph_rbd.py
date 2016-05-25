@@ -118,7 +118,7 @@ class CephRBDBlockDeviceAPI(object):
         """
         maps = dict()
         showmapped_output = self._check_output(
-            [b"rbd", "-p", self._pool, b"showmapped"]).strip()
+            [b"rbd", b"showmapped"]).strip()
         if not len(showmapped_output):
             return maps
         u_showmapped_output = showmapped_output.decode("utf-8")
@@ -221,7 +221,7 @@ class CephRBDBlockDeviceAPI(object):
             return
 
         self._check_output([
-            b"rbd", b"-p", self._pool, b"map", blockdevice_id])
+            b"rbd", b"map", blockdevice_id])
 
         rbd_image = rbd.Image(self._ioctx, _rbd_blockdevice_id(blockdevice_id))
         size = int(rbd_image.stat()["size"])
@@ -246,7 +246,7 @@ class CephRBDBlockDeviceAPI(object):
         self._check_exists(blockdevice_id)
         device_path = self.get_device_path(blockdevice_id).path
         self._check_output([
-            b"rbd", b"-p", self._pool, b"unmap", device_path])
+            b"rbd", b"unmap", device_path])
 
     def list_volumes(self):
         """
