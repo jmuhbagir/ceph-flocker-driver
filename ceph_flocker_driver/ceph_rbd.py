@@ -176,7 +176,7 @@ class CephRBDBlockDeviceAPI(object):
         all_images = rbd_inst.list(self._ioctx)
         if blockdevice_id in all_images:
             raise ImageExists(blockdevice_id)
-        rbd_inst.create(self._ioctx, _rbd_blockdevice_id(blockdevice_id), size, features=1)
+        rbd_inst.create(self._ioctx, _rbd_blockdevice_id(blockdevice_id), size, old_format=False, features=1)
         return BlockDeviceVolume(
             blockdevice_id=blockdevice_id, size=size, dataset_id=dataset_id)
 
