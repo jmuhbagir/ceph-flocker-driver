@@ -90,13 +90,14 @@ class CephRBDBlockDeviceAPI(object):
     A ``IBlockDeviceAPI`` which uses Ceph Rados Block Devices.
     """
 
-    def __init__(self, connection, ioctx, pool, command_runner):
+    def __init__(self, connection, ioctx, pool, clustername, command_runner):
         """
         XXX TODO
         """
         self._connection = connection
         self._ioctx = ioctx
         self._pool = pool
+		self._cluster_name = clustername
         self._check_output = command_runner
 
     def _check_exists(self, blockdevice_id):
@@ -118,7 +119,7 @@ class CephRBDBlockDeviceAPI(object):
         """
         maps = dict()
         showmapped_output = self._check_output(
-            [b"rbd", b"showmapped"]).strip()
+            [b"rbd", b"--cluster", self._cluster_name, b"showmapped"]).strip()
         if not len(showmapped_output):
             return maps
         u_showmapped_output = showmapped_output.decode("utf-8")
@@ -145,7 +146,7 @@ class CephRBDBlockDeviceAPI(object):
         mapped anywhere in the cluster.
         """
         self._check_exists(blockdevice_id)
-        output = self._check_output([b"rbd", b"status", blockdevice_id])
+        output = self._check_output([b"rbd", b"--cluster", self._cluster_name, b"status", blockdevice_id])
         return output.strip() != "Watchers: none"
 
     def allocation_unit(self):
@@ -221,7 +222,7 @@ class CephRBDBlockDeviceAPI(object):
             return
 
         self._check_output([
-            b"rbd", b"map", blockdevice_id])
+            b"rbd", b"--cluster", self._cluster_name, b"map", blockdevice_id])
 
         rbd_image = rbd.Image(self._ioctx, _rbd_blockdevice_id(blockdevice_id))
         size = int(rbd_image.stat()["size"])
@@ -246,7 +247,7 @@ class CephRBDBlockDeviceAPI(object):
         self._check_exists(blockdevice_id)
         device_path = self.get_device_path(blockdevice_id).path
         self._check_output([
-            b"rbd", b"unmap", device_path])
+            b"rbd", b"--cluster", self._cluster_name, b"unmap", device_path])
 
     def list_volumes(self):
         """
@@ -312,7 +313,7 @@ def rbd_from_configuration(
     cluster_name, user_id, ceph_conf_path, storage_pool
 ):
     try:
-        cluster = rados.Rados(conffile=ceph_conf_path)
+        cluster = rados.Rados(conffile=ceph_conf_path,clustername=cluster_name)
     except TypeError as e:
         # XXX eliot
         raise e
@@ -327,4 +328,4 @@ def rbd_from_configuration(
         raise Exception("Pool does not exist")  # XXX eliot
     ioctx = cluster.open_ioctx(storage_pool)
 
-    return CephRBDBlockDeviceAPI(cluster, ioctx, storage_pool, check_output)
+    return CephRBDBlockDeviceAPI(cluster, ioctx, storage_pool, cluster_name, check_output)
