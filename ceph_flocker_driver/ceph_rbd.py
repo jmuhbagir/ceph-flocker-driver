@@ -97,7 +97,7 @@ class CephRBDBlockDeviceAPI(object):
         self._connection = connection
         self._ioctx = ioctx
         self._pool = pool
-		self._cluster_name = clustername
+        self._cluster_name = clustername
         self._check_output = command_runner
 
     def _check_exists(self, blockdevice_id):
